@@ -34,4 +34,6 @@ jobs:
               exit 1
             fi
           done
+        else
+          echo "Didn't find any output files in the diff that were notebooks"
         fi
