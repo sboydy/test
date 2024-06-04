@@ -7,15 +7,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Install jq
       run: sudo apt-get install jq
 
     - name: Find Jupyter Notebooks with output data
       run: |
-        files_with_output=$(git diff --name-only HEAD^ | grep '.ipynb' | xargs -I{} sh -c 'jq ".cells[].outputs | length" {} | grep -v "^0$" > /dev/null && echo {}')
+        # Get the list of changed .ipynb files
+        if [ -z "$(git rev-parse HEAD^ 2>/dev/null)" ]; then
+          # If there's no previous commit (e.g., initial commit), use the initial commit instead of HEAD^
+          base_ref=$(git rev-list --max-parents=0 HEAD)
+        else
+          base_ref="HEAD^"
+        fi
+
+        files_with_output=$(git diff --name-only $base_ref HEAD | grep '.ipynb' || true)
+
         if [ -n "$files_with_output" ]; then
-          echo "Found Jupyter Notebooks with output data: $files_with_output"
-          exit 1
+          echo "Checking the following files for output data:"
+          echo "$files_with_output"
+
+          for file in $files_with_output; do
+            if jq '.cells[].outputs | length' "$file" | grep -v '^0$' > /dev/null; then
+              echo "File $file contains output data"
+              exit 1
+            fi
+          done
         fi
