@@ -12,22 +12,28 @@ jobs:
     - name: Install jq
       run: sudo apt-get install jq
 
-    - name: Find Jupyter Notebooks with output data
+
+    - name: Determine Base Reference
+      id: determine-base-ref
       run: |
-        # Determine the base reference for comparison
+        echo "Determining base reference..."
         if [ -z "$(git rev-parse --verify HEAD^ 2>/dev/null)" ]; then
           base_ref=$(git rev-list --max-parents=0 HEAD)
         else
           base_ref=$(git merge-base HEAD HEAD^)
         fi
+        echo "Base reference is: $base_ref"
+        echo "::set-output name=base_ref::$base_ref"
 
-        # Get the list of changed .ipynb files
+    - name: Find Jupyter Notebooks with output data
+      id: find-notebooks
+      run: |
+        base_ref=${{ steps.determine-base-ref.outputs.base_ref }}
         files_with_output=$(git diff --name-only $base_ref HEAD | grep '.ipynb' || true)
 
         if [ -n "$files_with_output" ]; then
           echo "Checking the following files for output data:"
           echo "$files_with_output"
-
           for file in $files_with_output; do
             if jq '.cells[].outputs | length' "$file" | grep -v '^0$' > /dev/null; then
               echo "File $file contains output data"
@@ -35,5 +41,5 @@ jobs:
             fi
           done
         else
-          echo "Didn't find any output files in the diff that were notebooks"
+          echo "No Jupyter Notebook files with output data found."
         fi
