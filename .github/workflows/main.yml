@@ -18,8 +18,10 @@ jobs:
       run: |
         echo "Determining base reference..."
         if [ -z "$(git rev-parse --verify HEAD^ 2>/dev/null)" ]; then
+          echo "Thinks there is no parent commit"
           base_ref=$(git rev-list --max-parents=0 HEAD)
         else
+          echo "Thinks there is a parent commit"
           base_ref=$(git merge-base HEAD HEAD^)
         fi
         echo "Base reference is: $base_ref"
