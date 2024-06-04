@@ -14,14 +14,14 @@ jobs:
 
     - name: Find Jupyter Notebooks with output data
       run: |
-        # Get the list of changed .ipynb files
-        if [ -z "$(git rev-parse HEAD^ 2>/dev/null)" ]; then
-          # If there's no previous commit (e.g., initial commit), use the initial commit instead of HEAD^
+        # Determine the base reference for comparison
+        if [ -z "$(git rev-parse --verify HEAD^ 2>/dev/null)" ]; then
           base_ref=$(git rev-list --max-parents=0 HEAD)
         else
-          base_ref="HEAD^"
+          base_ref=$(git merge-base HEAD HEAD^)
         fi
 
+        # Get the list of changed .ipynb files
         files_with_output=$(git diff --name-only $base_ref HEAD | grep '.ipynb' || true)
 
         if [ -n "$files_with_output" ]; then
