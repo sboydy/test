@@ -1,0 +1,21 @@
+name: Check Jupyter Notebooks
+
+on: [push, pull_request]
+
+jobs:
+  check-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install jq
+      run: sudo apt-get install jq
+
+    - name: Find Jupyter Notebooks with output data
+      run: |
+        files_with_output=$(git diff --name-only HEAD^ | grep '.ipynb' | xargs -I{} sh -c 'jq ".cells[].outputs | length" {} | grep -v "^0$" > /dev/null && echo {}')
+        if [ -n "$files_with_output" ]; then
+          echo "Found Jupyter Notebooks with output data: $files_with_output"
+          exit 1
+        fi
