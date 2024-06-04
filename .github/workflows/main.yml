@@ -19,18 +19,20 @@ jobs:
         echo "Determining base reference..."
         if [ -z "$(git rev-parse --verify HEAD^ 2>/dev/null)" ]; then
           echo "Thinks there is no parent commit"
-          base_ref=$(git rev-list --max-parents=0 HEAD)
+          base_ref=$(git merge-base HEAD HEAD^)
         else
           echo "Thinks there is a parent commit"
-          base_ref=$(git merge-base HEAD HEAD^)
+          base_ref=$(git rev-list --max-parents=0 HEAD)
+
         fi
         echo "Base reference is: $base_ref"
-        echo "::set-output name=base_ref::$base_ref"
+        echo "base_ref=$base_ref" >> $GITHUB_ENV
 
     - name: Find Jupyter Notebooks with output data
       id: find-notebooks
       run: |
-        base_ref=${{ steps.determine-base-ref.outputs.base_ref }}
+        base_ref=${{ env.base_ref}}
+        echo "Using base reference: $base_ref
         files_with_output=$(git diff --name-only $base_ref HEAD | grep '.ipynb' || true)
 
         if [ -n "$files_with_output" ]; then
