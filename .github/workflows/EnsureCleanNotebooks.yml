@@ -6,6 +6,9 @@ jobs:
   ensure_clean_jupyter_notebooks:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
     - uses: ResearchSoftwareActions/EnsureCleanNotebooksAction@1.1
       with:
         disable-checks: execution_count
