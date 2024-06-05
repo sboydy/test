@@ -1,6 +1,9 @@
 name: Check Jupyter Notebooks
 
-on: [push, pull_request]
+on: 
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
   ensure_clean_jupyter_notebooks:
